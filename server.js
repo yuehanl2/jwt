@@ -8,6 +8,17 @@ const bodyParser = require('body-parser');
 const path = require('path');
 
 
+  
+
+const isRevokedCallback = function(req, payload, done){
+    var issuer = payload.iss;
+    var tokenId = payload.jti;
+  
+    data.getRevokedToken(issuer, tokenId, function(err, token){
+      if (err) { return done(err); }
+      return done(null, !!token);
+    });
+  };
 app.use((req,res,next) =>{
     res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000/');
     res.setHeader('Access-Control-Allow-Headers', 'Content-type, Authorization');
@@ -25,19 +36,22 @@ const secretKey = 'My super secret key';
 
 const jwtMW = exjwt({
     secret:secretKey,
-    algorithms: ['HS256']
-});
+    algorithms: ['RS256'],
+    credentialsRequired: false,
+    isRevoked: isRevokedCallback
+  });
+
 
 let users=[
     {
         id:1,
-        username:'Yuehan',
+        username:'123',
         password:'123'
     },
 
     {
         id:2,
-        username:'Lan',
+        username:'321',
         password:'456'
     }
 ];
@@ -69,6 +83,11 @@ app.post('/api/login',(req,res)=>{
 
 });
 
+
+
+
+
+
 app.get('/api/dashboard', jwtMW, (req, res)=>{
    // console.log(req);
     res.json({
@@ -93,7 +112,18 @@ app.get('/api/prices', jwtMW, (req, res)=>{
      });
  });
  
- 
+ app.get('api//protected',
+  exjwt({
+    secret:secretKey,
+    algorithms: ['RS256'],
+    credentialsRequired: false,
+    isRevoked: isRevokedCallback
+  }),
+  function(req, res) {
+    if (!req.user.admin) return res.sendStatus(401);
+    res.sendStatus(200);
+  }
+);
 
 app.get('/', (req, res) =>  {
     res.sendFile(path.join(__dirname, 'index.html'));

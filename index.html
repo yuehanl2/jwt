@@ -89,6 +89,14 @@ function ChangeUrl(title, url) {
         alert("Browser does not support HTML5.");
     }
 } 
+
+
+function onLoad(){
+    const token=localStorage.getItem('jwt');
+    if (token){
+        getDashboard();
+    }
+}
 /*
 var container = document.querySelector('.content');
 
